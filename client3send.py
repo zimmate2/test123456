@@ -14,7 +14,7 @@ import tempfile
 
 
 def initiate():
-    registry()
+    #registry()
     tuneConnection()
 
 def registry():
